@@ -18,8 +18,56 @@ var State = {
 		var characters = array2d(9, 4);
 		var winds = array2d(4,4);
 		var dragons = array2d(3,4);
-		var wallNum = 136;
+		var wallNum;
+		function traversal(func){
+			for(var i in bamboos){
+				for(var j in bamboos[i]){
+					if(func(bamboos,i,j,"bamboos")===true) return;
+				}
+			}
+			for(var i in stones){
+				for(var j in stones[i]){
+					if(func(stones,i,j,"stones")===true) return;
+				}
+			}
+			for(var i in characters){
+				for(var j in characters[i]){
+					if(func(characters,i,j,"characters")===true) return;
+				}
+			}
+			for(var i in winds){
+				for(var j in winds[i]){
+					if(func(winds,i,j,"winds")===true) return;
+				}
+			}
+			for(var i in dragons){
+				for(var j in dragons[i]){
+					if(func(dragons,i,j,"dragons")===true) return;
+				}
+			}
+		}
+		function getTileStateArray(type){
+			switch(type){
+				case "winds": return winds
+				case "dragons": return dragons
+				case "bamboos": return bamboos
+				case "stones": return stones
+				case "characters": return characters
+				default: console.log("getTileState error!");
+			}
+		}
+		function setTileState(tile, value){
+			var type = tile[0];
+			var i=tile[1];
+			var j=tile[2];
+			var tileStateArray = getTileStateArray(type);
+			tileStateArray[i][j] = value;
+		}
 		state.init = function(){
+			traversal(function(tileStateArray, i, j, type){
+				tileStateArray[i][j] = -1;
+			});
+			wallNum = 136;
 			//for(var i=0; i<16; ++i) state.pickUp(0);
 			bamboos[0][0]=0;
 			bamboos[0][1]=0;
@@ -48,33 +96,6 @@ var State = {
 			for(var i=0; i<16; ++i) state.pickUp(2);
 			for(var i=0; i<16; ++i) state.pickUp(3);
 		}
-		function traversal(func){
-			for(var i in bamboos){
-				for(var j in bamboos[i]){
-					if(func(bamboos,i,j,"bamboos")===true) return;
-				}
-			}
-			for(var i in stones){
-				for(var j in stones[i]){
-					if(func(stones,i,j,"stones")===true) return;
-				}
-			}
-			for(var i in characters){
-				for(var j in characters[i]){
-					if(func(characters,i,j,"characters")===true) return;
-				}
-			}
-			for(var i in winds){
-				for(var j in winds[i]){
-					if(func(winds,i,j,"winds")===true) return;
-				}
-			}
-			for(var i in dragons){
-				for(var j in dragons[i]){
-					if(func(dragons,i,j,"dragons")===true) return;
-				}
-			}
-		}
 		state.getTiles = function(){
 			var tiles = [[],[],[],[]];
 			traversal(function(tileStateArray,i,j,type){
@@ -102,6 +123,33 @@ var State = {
 				}
 			});
 			return finalTile;
+		}
+		state.isSomebodyPong = function(tile){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			var i=tile[1];
+			var j=tile[2];
+			var histogram = [0,0,0,0];
+			for(var jj=0; jj<4; ++jj) {
+				if(jj != j) {
+					var state = tileStateArray[i][jj];
+					if(0<=state && state<4) histogram[state]++;
+				}
+			}
+			for(var turn=0; turn<4; ++turn) if(histogram[turn] >= 2) {
+			setTileState(tile, turn);
+			return turn;
+			}
+			return -1;
+		}
+		state.isSomebodyHu = function(tile){
+			var isHuArray = [false, false, false, false];
+			for(var turn=0; turn<4; ++turn){
+				setTileState(tile, turn);
+				isHuArray[turn] = state.isWin(turn);
+			}
+			setTileState(tile, -2);
+			return isHuArray;
 		}
 		state.isWin = function(turn){
 			var tiles = state.getTiles();
@@ -201,18 +249,8 @@ var State = {
 			return false;
 		}
 		state.isEndWallNum = function(){ return wallNum <= 8; }
-		state.takeAction = function(tile){
-			var type = tile[0];
-			var i=tile[1];
-			var j=tile[2];
-			switch(type){
-				case "winds": winds[i][j]=-2; break;
-				case "dragons": dragons[i][j]=-2; break;
-				case "bamboos": bamboos[i][j]=-2; break;
-				case "stones": stones[i][j]=-2; break;
-				case "characters": characters[i][j]=-2; break;
-				default: console.log("state.takeAction error!");
-			}
+		state.discard = function(tile){
+			setTileState(tile, -2);
 		}
 		state.getScore = function(tile, turn){
 			function countScore(tileStateArray,i,j){
@@ -238,18 +276,10 @@ var State = {
 				return score;
 			}
 			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
 			var i=tile[1];
 			var j=tile[2];
-			var score = 0;
-			switch(type){
-				case "winds": score = countScore(winds,i,j); break;
-				case "dragons": score = countScore(dragons,i,j); break;
-				case "bamboos": score = countScore(bamboos,i,j); break;
-				case "stones": score = countScore(stones,i,j); break;
-				case "characters": score = countScore(characters,i,j); break;
-				default: console.log("state.getScore error!");
-			}
-			return score;
+			return countScore(tileStateArray,i,j);
 		}
 		return state;
 	}

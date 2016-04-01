@@ -6,8 +6,8 @@ var Board = {
 		var dragons = ["X","Y","Z"];
 		var width = 600;
 		var height = 500;
-		var centerX = 0;
-		var centerY = 0;
+		var centerX;
+		var centerY;
 		function drawTile(tile,x,y){
 			context.rect(x,y,tileSize,tileSize);
 			context.strokeStyle = "black";
@@ -59,7 +59,19 @@ var Board = {
 					break;
 			}
 		}
+		function cleanTile(turn){
+			var size = tileSize;
+			switch(turn){
+				case 0: drawRect(300, 400, size, size); break;
+				case 1: drawRect(500, 250, size, size); break;
+				case 2: drawRect(300, 100, size, size); break;
+				case 3: drawRect(100, 250, size, size); break;
+				default: console.log("cleanTile error");
+			}
+		}
 		board.init = function(state){
+			centerX = 0;
+			centerY = 0;
 			drawRect(0,0,width,height);
 			var tiles = state.getTiles();
 			drawPlayer(tiles,0);
@@ -76,23 +88,24 @@ var Board = {
 				default: console.log("board.pickUp error");
 			}
 		}
-		board.discard = function(tile, turn, state){
+		board.change = function(tile, turnFrom, turnTo){
+			cleanTile(turnFrom);
+			board.pickUp(tile, turnTo);
+		}
+		board.replace = function(tile, turn, state){
+			cleanTile(turn);
+			board.pickUp(tile, turn);
+			var tiles = state.getTiles();
+			drawPlayer(tiles, turn);
+		}
+		board.discard = function(tile, turn){
+			cleanTile(turn);
 			drawTile(tile, 150 + centerX * tileSize, 150 + centerY * tileSize);
 			++centerX;
 			if(centerX==10){
 				centerX = 0;
 				++centerY;
 			}
-			var size = tileSize;
-			switch(turn){
-				case 0: drawRect(300, 400, size, size); break;
-				case 1: drawRect(500, 250, size, size); break;
-				case 2: drawRect(300, 100, size, size); break;
-				case 3: drawRect(100, 250, size, size); break;
-				default: console.log("board.discard error");
-			}
-			var tiles = state.getTiles();
-			drawPlayer(tiles,turn);
 		}
 		board.isInBoard = function(xx,yy){
 			return 0<=xx && xx<width && 0<=yy && yy<height;

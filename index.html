@@ -40,15 +40,14 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 var state = State.createNew();
-state.init();
 
 var board = Board.createNew(canvas.getContext("2d"))
-board.init(state);
 
 var agents = [ReflexAgent.createNew(state, 0), ReflexAgent.createNew(state, 1), ReflexAgent.createNew(state, 2), ReflexAgent.createNew(state, 3)];
 
 var game = Game.createNew(agents, state, canvas, board);
 game.start();
+//game.simulate();
 
 </script>
 </body>
