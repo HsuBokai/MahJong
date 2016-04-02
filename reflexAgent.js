@@ -2,6 +2,15 @@
 var ReflexAgent = {
 	createNew: function(state, myTurn){
 		var agent = {};
+		agent.doChew = function(){
+			return true;
+		}
+		agent.doPong = function(){
+			return true;
+		}
+		agent.doKong = function(){
+			return true;
+		}
 		agent.doHu = function(){
 			return true;
 		}

@@ -8,6 +8,13 @@ var Board = {
 		var height = 500;
 		var centerX;
 		var centerY;
+
+		var pick02x;
+		var pick0y;
+		var pick1x;
+		var pick13y;
+		var pick2y;
+		var pick3x;
 		function drawTile(tile,x,y){
 			context.rect(x,y,tileSize,tileSize);
 			context.strokeStyle = "black";
@@ -62,16 +69,24 @@ var Board = {
 		function cleanTile(turn){
 			var size = tileSize;
 			switch(turn){
-				case 0: drawRect(300, 400, size, size); break;
-				case 1: drawRect(500, 250, size, size); break;
-				case 2: drawRect(300, 100, size, size); break;
-				case 3: drawRect(100, 250, size, size); break;
+				case 0: drawRect(pick02x, pick0y, size, size); break;
+				case 1: drawRect(pick1x, pick13y, size, size); break;
+				case 2: drawRect(pick02x, pick2y, size, size); break;
+				case 3: drawRect(pick3x, pick13y, size, size); break;
 				default: console.log("cleanTile error");
 			}
 		}
 		board.init = function(state){
 			centerX = 0;
 			centerY = 0;
+			
+			pick02x = 300;
+			pick0y = 400;
+			pick1x = 500;
+			pick13y = 250;
+			pick2y = 100;
+			pick3x = 100;
+
 			drawRect(0,0,width,height);
 			var tiles = state.getTiles();
 			drawPlayer(tiles,0);
@@ -81,10 +96,10 @@ var Board = {
 		}
 		board.pickUp = function(tile, turn){
 			switch(turn){
-				case 0: drawTile(tile, 300, 400); break;
-				case 1: drawTile(tile, 500, 250); break;
-				case 2: drawTile(tile, 300, 100); break;
-				case 3: drawTile(tile, 100, 250); break;
+				case 0: drawTile(tile, pick02x, pick0y); break;
+				case 1: drawTile(tile, pick1x, pick13y); break;
+				case 2: drawTile(tile, pick02x, pick2y); break;
+				case 3: drawTile(tile, pick3x, pick13y); break;
 				default: console.log("board.pickUp error");
 			}
 		}
@@ -105,6 +120,16 @@ var Board = {
 			if(centerX==10){
 				centerX = 0;
 				++centerY;
+			}
+		}
+		board.kong = function(tile, turn){
+			cleanTile(turn);
+			switch(turn){
+				case 0: drawTile(tile, pick02x + tileSize, pick0y); break;
+				case 1: drawTile(tile, pick1x, pick13y + tileSize); break;
+				case 2: drawTile(tile, pick02x + tileSize, pick2y); break;
+				case 3: drawTile(tile, pick3x, pick13y + tileSize); break;
+				default: console.log("board.pickUp error");
 			}
 		}
 		board.isInBoard = function(xx,yy){

@@ -22,6 +22,20 @@ var Game = {
 				window.alert(text);
 				return;
 			}
+			nextStep = complement;
+			if(isPause===false) setTimeout(nextStep, duration);
+		}
+		function complement(){
+			console.log("complement");
+			var isSelfKong = state.isSelfKong(nowTile, turn);
+			if(isSelfKong && agents[turn].doKong()){
+				state.discard(nowTile);
+				board.kong(nowTile, turn);
+				console.log("%%%%%%%%%%%%%%%%%%%%%%%%% Kong!!", turn);
+				nextStep = pickUp;
+				if(isPause===false) setTimeout(nextStep, duration);
+				return;
+			}
 			nextStep = replace;
 			if(isPause===false) setTimeout(nextStep, duration);
 		}
@@ -49,10 +63,20 @@ var Game = {
 				return;
 			}
 			var isPong = state.isSomebodyPong(nowTile);
-			if(isPong != -1 && isPong != turn){
+			if(isPong != -1 && isPong != turn && agents[isPong].doPong()){
 				board.change(nowTile, turn, isPong);
 				turn = isPong;
-				console.log("Pong!!", turn);
+				console.log("============================ Pong!!", turn);
+				nextStep = replace;
+				if(isPause===false) setTimeout(nextStep, duration);
+				return;
+			}
+			var nextTurn = (turn+1)%4;
+			var isNextChew = state.isNextChew(nowTile, nextTurn);
+			if(isNextChew === true && agents[nextTurn].doChew()){
+				board.change(nowTile, turn, nextTurn);
+				turn = nextTurn;
+				console.log("************** Chew!!", turn);
 				nextStep = replace;
 				if(isPause===false) setTimeout(nextStep, duration);
 				return;

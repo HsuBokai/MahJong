@@ -63,12 +63,22 @@ var State = {
 			var tileStateArray = getTileStateArray(type);
 			tileStateArray[i][j] = value;
 		}
+		function isOneHasPos(tileStateArray, pos, turn){
+			if(tileStateArray.length != 9) return false;
+			if(0<=pos && pos<9){
+				for(var jj=0; jj<4; ++jj) {
+					if(tileStateArray[pos][jj]===turn) return true;
+				}
+			}
+			return false;
+		}
 		state.init = function(){
 			traversal(function(tileStateArray, i, j, type){
 				tileStateArray[i][j] = -1;
 			});
 			wallNum = 136;
-			//for(var i=0; i<16; ++i) state.pickUp(0);
+			for(var i=0; i<16; ++i) state.pickUp(0);
+			/*
 			bamboos[0][0]=0;
 			bamboos[0][1]=0;
 			bamboos[0][2]=0;
@@ -92,6 +102,7 @@ var State = {
 			dragons[0][0]=0;
 			dragons[0][1]=0;
 			wallNum-=16;
+			*/
 			for(var i=0; i<16; ++i) state.pickUp(1);
 			for(var i=0; i<16; ++i) state.pickUp(2);
 			for(var i=0; i<16; ++i) state.pickUp(3);
@@ -124,6 +135,34 @@ var State = {
 			});
 			return finalTile;
 		}
+		state.isNextChew = function(tile, nextTurn){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			if(tileStateArray.length != 9) return false;
+			var i=tile[1];
+			var histogram = [isOneHasPos(tileStateArray,i-2,nextTurn),
+				isOneHasPos(tileStateArray,i-1,nextTurn),
+				false,
+				isOneHasPos(tileStateArray,i+1,nextTurn),
+				isOneHasPos(tileStateArray,i+2,nextTurn)];
+			if(	(histogram[0]===true && histogram[1]===true) ||
+				(histogram[1]===true && histogram[3]===true) ||
+				(histogram[3]===true && histogram[4]===true) ){
+				setTileState(tile, nextTurn);
+				return true;
+			}
+			return false;
+		}
+		state.isSelfKong = function(tile, turn){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			var i=tile[1];
+			var j=tile[2];
+			for(var jj=0; jj<4; ++jj) {
+				if(tileStateArray[i][jj] != turn) return false;;
+			}
+			return true;
+		}
 		state.isSomebodyPong = function(tile){
 			var type = tile[0];
 			var tileStateArray = getTileStateArray(type);
@@ -136,9 +175,11 @@ var State = {
 					if(0<=state && state<4) histogram[state]++;
 				}
 			}
-			for(var turn=0; turn<4; ++turn) if(histogram[turn] >= 2) {
-			setTileState(tile, turn);
-			return turn;
+			for(var turn=0; turn<4; ++turn) {
+				if(histogram[turn] === 2) {
+					setTileState(tile, turn);
+					return turn;
+				}
 			}
 			return -1;
 		}
@@ -258,21 +299,11 @@ var State = {
 				for(var jj=0; jj<4; ++jj) {
 					if(jj!=j) if(tileStateArray[i][jj]===turn) score += 5;
 				}
-				if(tileStateArray.length < 9) return score;
-				if(1<=i){
-					var addScore = 0;
-					for(var jj=0; jj<4; ++jj) {
-						if(tileStateArray[i-1][jj]===turn) addScore = 3;
-					}
-					score += addScore;
-				}
-				if(i<=7){
-					var addScore = 0;
-					for(var jj=0; jj<4; ++jj) {
-						if(tileStateArray[i+1][jj]===turn) addScore = 3;
-					}
-					score += addScore;
-				}
+				if(tileStateArray.length != 9) return score;
+				if(isOneHasPos(tileStateArray, i-1, turn)) score += 3;
+				if(isOneHasPos(tileStateArray, i+1, turn)) score += 3;
+				if(isOneHasPos(tileStateArray, i-2, turn)) score += 1;
+				if(isOneHasPos(tileStateArray, i+2, turn)) score += 1;
 				return score;
 			}
 			var type = tile[0];
