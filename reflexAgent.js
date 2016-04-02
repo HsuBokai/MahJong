@@ -17,7 +17,7 @@ var ReflexAgent = {
 		agent.getAction = function(){
 			var tiles = state.getTiles();
 			var myTiles = tiles[myTurn];
-			console.log(myTiles.length);
+			//console.log(myTiles.length);
 			var minScore = 9999;
 			var i=17;
 			while(i--){

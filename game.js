@@ -3,136 +3,146 @@ var Game = {
 	createNew: function(agents, state, canvas, board){
 		var game = {};
 		var turn;
-		var duration = 100;
+		var duration;
 		var nextStep;
 		var nowTile;
-		var isPause = false;
-		game.takeTurn = function(){
-			turn = (turn+1)%4;
+		var isEndArray = [0,0,0,0,0];
+		var isPause;
+		function nextTurn(){
+			return (turn+1)%4;
+		}
+		function isAnimation(){
+			return duration > 0 && isPause===false;
 		}
 		function pickUp() {
-			console.log("pickup");
+			//console.log("pickup");
 			nowTile = state.pickUp(turn);
-			board.pickUp(nowTile, turn);
+			if(isAnimation()) board.pickUp(nowTile, turn);
 			var isSelfWin = state.isWin( turn );
 			if(isSelfWin || state.isEndWallNum()){
 				var text;
-				if(isSelfWin) text = turn + " wins!! ";
-				else text = "no one wins!!";
-				window.alert(text);
+				if(isSelfWin) {
+					isEndArray[turn] = 1;
+					text = turn + " wins!! ";
+				}
+				else {
+					isEndArray[4] = 1;
+					text = "no one wins!!";
+				}
+				if(isAnimation()) window.alert(text);
+				//else console.log(text);
 				return;
 			}
 			nextStep = complement;
-			if(isPause===false) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration);
 		}
 		function complement(){
-			console.log("complement");
+			//console.log("complement");
 			var isSelfKong = state.isSelfKong(nowTile, turn);
 			if(isSelfKong && agents[turn].doKong()){
 				state.discard(nowTile);
-				board.kong(nowTile, turn);
-				console.log("%%%%%%%%%%%%%%%%%%%%%%%%% Kong!!", turn);
+				if(isAnimation()) board.kong(nowTile, turn);
+				//console.log("%%%%%%%%%%%%%%%%%%%%%%%%% Kong!!", turn);
 				nextStep = pickUp;
-				if(isPause===false) setTimeout(nextStep, duration);
+				if(isAnimation()) setTimeout(nextStep, duration);
 				return;
 			}
 			nextStep = replace;
-			if(isPause===false) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration);
 		}
 		function replace(){
-			console.log("replace");
-			var agent = agents[turn];
-			if(agent.isManual()) return;
-			nowTile = agent.getAction();
-			
-			console.log(nowTile, turn);
-			
+			//console.log("replace");
+			nowTile = agents[turn].getAction();
 			state.discard(nowTile);
-			board.replace(nowTile, turn, state);
+			//console.log(nowTile, turn);
+			if(isAnimation()) board.replace(nowTile, turn, state);
 			nextStep = change;
-			if(isPause===false) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration);
 		}
 		function change(){
-			console.log("change");
+			//console.log("change");
 			var isHuArray = state.isSomebodyHu(nowTile);
 			var text = "";
-			for(var i=0; i<4; ++i) if(isHuArray[i] && agents[i].doHu()) text += (i + " wins!! ");
+			for(var i=0; i<4; ++i) {
+				if(isHuArray[i] && agents[i].doHu()) {
+					isEndArray[i] = 1;
+					text += (i + " wins!! ");
+				}
+			}
 			if(text != ""){
-				board.discard(nowTile, turn);
-				window.alert(text);
+				if(isAnimation()){
+					board.discard(nowTile, turn);
+					window.alert(text);
+				}
+				//else console.log(text);
 				return;
 			}
 			var isPong = state.isSomebodyPong(nowTile);
 			if(isPong != -1 && isPong != turn && agents[isPong].doPong()){
-				board.change(nowTile, turn, isPong);
+				if(isAnimation()) board.change(nowTile, turn, isPong);
 				turn = isPong;
-				console.log("============================ Pong!!", turn);
+				//console.log("============================ Pong!!", turn);
 				nextStep = replace;
-				if(isPause===false) setTimeout(nextStep, duration);
+				if(isAnimation()) setTimeout(nextStep, duration);
 				return;
 			}
-			var nextTurn = (turn+1)%4;
-			var isNextChew = state.isNextChew(nowTile, nextTurn);
-			if(isNextChew === true && agents[nextTurn].doChew()){
-				board.change(nowTile, turn, nextTurn);
-				turn = nextTurn;
-				console.log("************** Chew!!", turn);
+			var nextPlayerTurn = nextTurn();
+			var isNextChew = state.isNextChew(nowTile, nextPlayerTurn);
+			if(isNextChew === true && agents[nextPlayerTurn].doChew()){
+				if(isAnimation()) board.change(nowTile, turn, nextPlayerTurn);
+				turn = nextPlayerTurn;
+				//console.log("************** Chew!!", turn);
 				nextStep = replace;
-				if(isPause===false) setTimeout(nextStep, duration);
+				if(isAnimation()) setTimeout(nextStep, duration);
 				return;
 			}
 			nextStep = discard;
-			if(isPause===false) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration);
 		}
 		function discard() {
-			console.log("discard");
+			//console.log("discard");
 			state.discard(nowTile);
-			board.discard(nowTile, turn);
-			game.takeTurn();
+			if(isAnimation()) board.discard(nowTile, turn);
+			turn = nextTurn();
 			nextStep = pickUp;
-			if(isPause===false) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration);
 		}
-		game.start = function(){
-			canvas.addEventListener("mousedown", function(event){
-				isPause = (isPause) ? false : true;
-				if(isPause===false) setTimeout(nextStep, duration);
-			}, false);
+		function initGame(){
+			isPause = false;
+			for(var i=0; i<5; ++i) isEndArray[i] = 0;
 			turn = 0;
 			state.init();
-			board.init(state);
+			if(isAnimation()) board.init(state);
 			nextStep = pickUp;
-			if(isPause===false) setTimeout(nextStep, duration);
+		}
+		game.start = function(){
+			duration = 100;
+			canvas.addEventListener("mousedown", function(event){
+				isPause = (isPause) ? false : true;
+				if(isAnimation()) setTimeout(nextStep, duration);
+			}, false);
+			initGame();
+			if(isAnimation()) setTimeout(nextStep, duration);
+		}
+		function isEnd(){
+			return !(isEndArray[0]===0 && isEndArray[1]===0 && isEndArray[2]===0 && isEndArray[3]===0 && isEndArray[4]===0);
 		}
 		game.simulate = function(){
-			setTimeout(function(){
+			canvas.addEventListener("mousedown", function(event){
+				duration = 0;
 				var histogram = [0,0,0,0,0];
-				var simuTimes = 100;
-				for(var i=0; i<simuTimes; ++i){
-					turn = 0;
-					state.init();
-					var isEndWallNum = false;
-					var isSelfWin = false;
-					while(true){
-						state.pickUp(turn);
-						isEndWallNum = state.isEndWallNum();
-						if(isEndWallNum) {
-							histogram[4]++;
-							break;
-						}
-						isSelfWin = state.isWin( turn );
-						if(isSelfWin) {
-							histogram[turn]++;
-							break;
-						}
-						var agent = agents[turn];
-						var tile = agent.getAction();
-						state.discard(tile);
-						game.takeTurn();
+				var simuTimes = 500;
+				for(var time=0; time<simuTimes; ++time){
+					initGame();
+					while(!isEnd()) {
+						nextStep();
 					}
+					//console.log(isEndArray);
+					for(var i=0; i<5; ++i) histogram[i] += isEndArray[i];
 				}
 				for(var i=0; i<5; ++i) histogram[i] /= simuTimes;
 				console.log(histogram);
-			}, 1000);
+			}, false);
 		}
 		return game;
 	}
