@@ -19,29 +19,31 @@ var State = {
 		var winds = array2d(4,4);
 		var dragons = array2d(3,4);
 		var wallNum;
+
+		var typeSplit = [[0,0,0,0],[0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]];
 		function traversal(func){
-			for(var i in bamboos){
-				for(var j in bamboos[i]){
+			for(var i=0; i<9; ++i){
+				for(var j=0; j<4; ++j){
 					if(func(bamboos,i,j,"bamboos")===true) return;
 				}
 			}
-			for(var i in stones){
-				for(var j in stones[i]){
+			for(var i=0; i<9; ++i){
+				for(var j=0; j<4; ++j){
 					if(func(stones,i,j,"stones")===true) return;
 				}
 			}
-			for(var i in characters){
-				for(var j in characters[i]){
+			for(var i=0; i<9; ++i){
+				for(var j=0; j<4; ++j){
 					if(func(characters,i,j,"characters")===true) return;
 				}
 			}
-			for(var i in winds){
-				for(var j in winds[i]){
+			for(var i=0; i<4; ++i){
+				for(var j=0; j<4; ++j){
 					if(func(winds,i,j,"winds")===true) return;
 				}
 			}
-			for(var i in dragons){
-				for(var j in dragons[i]){
+			for(var i=0; i<3; ++i){
+				for(var j=0; j<4; ++j){
 					if(func(dragons,i,j,"dragons")===true) return;
 				}
 			}
@@ -65,61 +67,53 @@ var State = {
 		}
 		function isOneHasPos(tileStateArray, pos, turn){
 			if(tileStateArray.length != 9) return false;
-			if(0<=pos && pos<9){
-				for(var jj=0; jj<4; ++jj) {
-					if(tileStateArray[pos][jj]===turn) return true;
-				}
+			if(pos<0 || pos>=9) return false;
+			for(var jj=0; jj<4; ++jj) {
+				if(tileStateArray[pos][jj]===turn) return true;
 			}
 			return false;
 		}
 		state.init = function(){
+			function n_choose_m(n,m){
+				var arr = array1d(n);
+				var pn = n;
+				var pm = m;
+				for(var i=0; i<n; ++i){
+					if(Math.random()*pn < pm){
+						arr[i] = true;
+						--pm;
+					}
+					else arr[i] = false;
+					--pn;
+				}
+				return arr;
+			}
+			function issue(turn){
+				var count = 0;
+				var arr = n_choose_m(wallNum, 16);
+				traversal(function(tileStateArray, i, j, type){
+					if(tileStateArray[i][j]===-1) if(arr[count++]) tileStateArray[i][j] = turn;
+				});
+				wallNum -= 16;
+			}
+			wallNum = 136;
 			traversal(function(tileStateArray, i, j, type){
 				tileStateArray[i][j] = -1;
 			});
-			wallNum = 136;
-			for(var i=0; i<16; ++i) state.pickUp(0);
-			/*
-			bamboos[0][0]=0;
-			bamboos[0][1]=0;
-			bamboos[0][2]=0;
-
-			bamboos[5][0]=0;
-			bamboos[4][1]=0;
-			bamboos[3][2]=0;
-
-			bamboos[3][0]=0;
-			bamboos[3][3]=0;
-			//bamboos[2][2]=0;
-
-			bamboos[4][0]=0;
-			bamboos[3][1]=0;
-			bamboos[5][2]=0;
-
-			winds[0][0]=0;
-			winds[0][1]=0;
-			winds[0][2]=0;
-
-			dragons[0][0]=0;
-			dragons[0][1]=0;
-			wallNum-=16;
-			*/
-			for(var i=0; i<16; ++i) state.pickUp(1);
-			for(var i=0; i<16; ++i) state.pickUp(2);
-			for(var i=0; i<16; ++i) state.pickUp(3);
+			issue(0);
+			issue(1);
+			issue(2);
+			issue(3);
 		}
 		state.getTiles = function(){
 			var tiles = [[],[],[],[]];
 			traversal(function(tileStateArray,i,j,type){
 				var tileState = tileStateArray[i][j];
-				if(0 <= tileState && tileState < 4) tiles[tileState].push([type, parseInt(i), parseInt(j)]);
+				if(0 <= tileState && tileState < 4) tiles[tileState].push([type,i,j]);
 			});
 			return tiles;
 		}
 		state.pickUp = function(turn){
-			/*if(turn===0) {
-				dragons[0][3]=0;
-				return ["dragons",0,3];
-			}*/
 			var num = Math.floor(Math.random() * (wallNum));
 			var finalTile;
 			traversal(function(tileStateArray, i, j, type){
@@ -201,11 +195,10 @@ var State = {
 				return tile1[0]===tile2[0] && tile1[1]===tile2[1];
 			}
 			function getTypeSplit(eye1, eye2){
-				var initArr = [0,0,0,0,0,0,0,0,0]
-				var typeSplit = [[0,0,0,0],[0,0,0]];
-				typeSplit.push(initArr.slice());
-				typeSplit.push(initArr.slice());
-				typeSplit.push(initArr.slice());
+				for(var ii=0; ii<5; ++ii) {
+					var len = typeSplit[ii].length;
+					for(var i=0; i<len; ++i) typeSplit[ii][i]=0;
+				}
 				for(var j=0; j<17; ++j){
 					if(j!=eye1 && j!=eye2){
 						var type = myTiles[j][0];
@@ -220,7 +213,6 @@ var State = {
 						}
 					}
 				}
-				return typeSplit;
 			}
 			function is_winds_dragons_ok(valueArr){
 				var len = valueArr.length;
@@ -279,7 +271,7 @@ var State = {
 			}
 			for(var i=1; i<17; ++i) {
 				if(isTheSame(myTiles[i-1], myTiles[i])) {
-					var typeSplit = getTypeSplit(i-1,i);
+					getTypeSplit(i-1,i);
 					if( is_winds_dragons_ok(typeSplit[0])===true &&
 					is_winds_dragons_ok(typeSplit[1])===true &&
 					is_123456789_ok(typeSplit[2])===true &&
@@ -293,17 +285,17 @@ var State = {
 		state.discard = function(tile){
 			setTileState(tile, -2);
 		}
-		state.getScore = function(tile, turn){
+		state.getScore = function(tile, turn, s0, s1, s2){
 			function countScore(tileStateArray,i,j){
 				var score = 0;
 				for(var jj=0; jj<4; ++jj) {
-					if(jj!=j) if(tileStateArray[i][jj]===turn) score += 5;
+					if(jj!=j) if(tileStateArray[i][jj]===turn) score += s0;
 				}
 				if(tileStateArray.length != 9) return score;
-				if(isOneHasPos(tileStateArray, i-1, turn)) score += 3;
-				if(isOneHasPos(tileStateArray, i+1, turn)) score += 3;
-				if(isOneHasPos(tileStateArray, i-2, turn)) score += 1;
-				if(isOneHasPos(tileStateArray, i+2, turn)) score += 1;
+				if(isOneHasPos(tileStateArray, i-1, turn)) score += s1;
+				if(isOneHasPos(tileStateArray, i+1, turn)) score += s1;
+				if(isOneHasPos(tileStateArray, i-2, turn)) score += s2;
+				if(isOneHasPos(tileStateArray, i+2, turn)) score += s2;
 				return score;
 			}
 			var type = tile[0];
@@ -311,6 +303,52 @@ var State = {
 			var i=tile[1];
 			var j=tile[2];
 			return countScore(tileStateArray,i,j);
+		}
+		state.getScoreByRemain = function(tile, turn){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			var i=tile[1];
+			var j=tile[2];
+			var score = 0;
+			
+			var pongNum = 0;
+			for(var jj=0; jj<4; ++jj) {
+				if(tileStateArray[i][jj]===turn) ++pongNum;
+			}
+			if(pongNum === 2) score += ((state.remainTileNum(type,i,turn) * 35) );
+			//if(pongNum === 2) score += 60;
+			else if(pongNum === 3) score += 120;
+			else if(pongNum === 4) score += 140;
+			//score += ((pongNum-1)*5);
+			
+			if(tileStateArray.length != 9) return score;
+
+			function chewScore(other, wait){
+				if(isOneHasPos(tileStateArray, other, turn)) {
+					//score += 20;
+					if(isOneHasPos(tileStateArray, wait, turn)) score += 25;
+					else {
+						var waitingNum = state.remainTileNum(type, wait, turn);
+						//console.log(tile);
+						//console.log(type, wait, waitingNum);
+						score += (waitingNum * 4);
+					}
+				}
+			}
+			chewScore(i-1,i-2);
+			chewScore(i-1,i+1);
+			chewScore(i+1,i+2);
+			chewScore(i+1,i-1);
+			chewScore(i-2,i-1);
+			chewScore(i+2,i+1);
+			return score;
+		}
+		state.remainTileNum = function(type, i, turn){
+			if(i<0 || i>=9) return 0;
+			var tileStateArray = getTileStateArray(type);
+			var sum = 0;
+			for(var jj=0; jj<4; ++jj) if(tileStateArray[i][jj]===turn || tileStateArray[i][jj]===-2) ++sum;
+			return 4-sum;
 		}
 		return state;
 	}

@@ -42,7 +42,7 @@ var Game = {
 			if(isSelfKong && agents[turn].doKong()){
 				state.discard(nowTile);
 				if(isAnimation()) board.kong(nowTile, turn);
-				//console.log("%%%%%%%%%%%%%%%%%%%%%%%%% Kong!!", turn);
+				//console.log("&&&&&&&&&&&&&&&&&&&&&&&&& Kong!!", turn);
 				nextStep = pickUp;
 				if(isAnimation()) setTimeout(nextStep, duration);
 				return;
@@ -78,23 +78,29 @@ var Game = {
 				return;
 			}
 			var isPong = state.isSomebodyPong(nowTile);
-			if(isPong != -1 && isPong != turn && agents[isPong].doPong()){
-				if(isAnimation()) board.change(nowTile, turn, isPong);
-				turn = isPong;
-				//console.log("============================ Pong!!", turn);
-				nextStep = replace;
-				if(isAnimation()) setTimeout(nextStep, duration);
-				return;
+			if(isPong != -1 && isPong != turn){
+				if(agents[isPong].doPong()){
+					if(isAnimation()) board.change(nowTile, turn, isPong);
+					turn = isPong;
+					//console.log("============================ Pong!!", turn);
+					nextStep = replace;
+					if(isAnimation()) setTimeout(nextStep, duration);
+					return;
+				}
+				else state.discard(nowTile);
 			}
 			var nextPlayerTurn = nextTurn();
 			var isNextChew = state.isNextChew(nowTile, nextPlayerTurn);
-			if(isNextChew === true && agents[nextPlayerTurn].doChew()){
-				if(isAnimation()) board.change(nowTile, turn, nextPlayerTurn);
-				turn = nextPlayerTurn;
-				//console.log("************** Chew!!", turn);
-				nextStep = replace;
-				if(isAnimation()) setTimeout(nextStep, duration);
-				return;
+			if(isNextChew === true){
+				if(agents[nextPlayerTurn].doChew()){
+					if(isAnimation()) board.change(nowTile, turn, nextPlayerTurn);
+					turn = nextPlayerTurn;
+					//console.log("************** Chew!!", turn);
+					nextStep = replace;
+					if(isAnimation()) setTimeout(nextStep, duration);
+					return;
+				}
+				else state.discard(nowTile);
 			}
 			nextStep = discard;
 			if(isAnimation()) setTimeout(nextStep, duration);
@@ -115,8 +121,8 @@ var Game = {
 			if(isAnimation()) board.init(state);
 			nextStep = pickUp;
 		}
-		game.start = function(){
-			duration = 100;
+		game.start = function(d){
+			duration = d;
 			canvas.addEventListener("mousedown", function(event){
 				isPause = (isPause) ? false : true;
 				if(isAnimation()) setTimeout(nextStep, duration);
@@ -131,10 +137,11 @@ var Game = {
 			canvas.addEventListener("mousedown", function(event){
 				duration = 0;
 				var histogram = [0,0,0,0,0];
-				var simuTimes = 500;
+				var simuTimes = 1000;
 				for(var time=0; time<simuTimes; ++time){
 					initGame();
-					while(!isEnd()) {
+					var maxSteps = 10000;
+					while(maxSteps-- && !isEnd()) {
 						nextStep();
 					}
 					//console.log(isEndArray);
