@@ -21,6 +21,9 @@ var State = {
 		var wallNum;
 
 		var typeSplit = [[0,0,0,0],[0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]];
+		function isBelongTo(state, turn) {
+			return state === turn || (state - 10) === turn;
+		}
 		function traversal(func){
 			for(var i=0; i<9; ++i){
 				for(var j=0; j<4; ++j){
@@ -59,17 +62,18 @@ var State = {
 			}
 		}
 		function setTileState(tile, value){
+			//console.log(tile);
 			var type = tile[0];
 			var i=tile[1];
 			var j=tile[2];
 			var tileStateArray = getTileStateArray(type);
 			tileStateArray[i][j] = value;
 		}
-		function isOneHasPos(tileStateArray, pos, turn){
+		function isOneHandHasPos(tileStateArray, pos, turn){
 			if(tileStateArray.length != 9) return false;
 			if(pos<0 || pos>=9) return false;
 			for(var jj=0; jj<4; ++jj) {
-				if(tileStateArray[pos][jj]===turn) return true;
+				if(tileStateArray[pos][jj] === turn) return true;
 			}
 			return false;
 		}
@@ -105,11 +109,12 @@ var State = {
 			issue(2);
 			issue(3);
 		}
-		state.getTiles = function(){
+		state.getTiles = function(isShowing){
 			var tiles = [[],[],[],[]];
 			traversal(function(tileStateArray,i,j,type){
 				var tileState = tileStateArray[i][j];
-				if(0 <= tileState && tileState < 4) tiles[tileState].push([type,i,j]);
+				if(0 <= tileState && tileState < 4) tiles[tileState].push([type,i,j,false]);
+				if(isShowing) if(10 <= tileState && tileState < 14) tiles[tileState-10].push([type,i,j,true]);
 			});
 			return tiles;
 		}
@@ -117,7 +122,7 @@ var State = {
 			var num = Math.floor(Math.random() * (wallNum));
 			var finalTile;
 			traversal(function(tileStateArray, i, j, type){
-				if(tileStateArray[i][j]==-1){
+				if(tileStateArray[i][j] === -1){
 					if(num==0) {
 						finalTile = [type, parseInt(i), parseInt(j)];
 						tileStateArray[i][j] = turn;
@@ -134,18 +139,32 @@ var State = {
 			var tileStateArray = getTileStateArray(type);
 			if(tileStateArray.length != 9) return false;
 			var i=tile[1];
-			var histogram = [isOneHasPos(tileStateArray,i-2,nextTurn),
-				isOneHasPos(tileStateArray,i-1,nextTurn),
+			var histogram = [isOneHandHasPos(tileStateArray,i-2,nextTurn),
+				isOneHandHasPos(tileStateArray,i-1,nextTurn),
 				false,
-				isOneHasPos(tileStateArray,i+1,nextTurn),
-				isOneHasPos(tileStateArray,i+2,nextTurn)];
-			if(	(histogram[0]===true && histogram[1]===true) ||
+				isOneHandHasPos(tileStateArray,i+1,nextTurn),
+				isOneHandHasPos(tileStateArray,i+2,nextTurn)];
+			return (histogram[0]===true && histogram[1]===true) ||
 				(histogram[1]===true && histogram[3]===true) ||
-				(histogram[3]===true && histogram[4]===true) ){
-				setTileState(tile, nextTurn);
-				return true;
+				(histogram[3]===true && histogram[4]===true);
+		}
+		state.doNextChew = function(tile, i1, i2, nextTurn){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			if(tileStateArray.length != 9) return;
+			function updateState(i){
+				for(var jj=0; jj<4; ++jj){
+					if(tileStateArray[i][jj]===nextTurn) {
+						tileStateArray[i][jj] = (nextTurn + 10);
+						return;
+					}
+				}
 			}
-			return false;
+			updateState(i1);
+			updateState(i2);
+			var i = tile[1];
+			var j = tile[2];
+			tileStateArray[i][j] = (nextTurn + 10);
 		}
 		state.isSelfKong = function(tile, turn){
 			var type = tile[0];
@@ -156,6 +175,16 @@ var State = {
 				if(tileStateArray[i][jj] != turn) return false;;
 			}
 			return true;
+		}
+		state.doSelfKong = function(tile, turn){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			var i=tile[1];
+			var j=tile[2];
+			for(var jj=0; jj<4; ++jj) {
+				if(jj===j) tileStateArray[i][jj] = -2;
+				else tileStateArray[i][jj] = (turn + 10);
+			}
 		}
 		state.isSomebodyPong = function(tile){
 			var type = tile[0];
@@ -171,11 +200,21 @@ var State = {
 			}
 			for(var turn=0; turn<4; ++turn) {
 				if(histogram[turn] === 2) {
-					setTileState(tile, turn);
 					return turn;
 				}
 			}
 			return -1;
+		}
+		state.somebodyDoPong = function(tile, turn){
+			var type = tile[0];
+			var tileStateArray = getTileStateArray(type);
+			var i=tile[1];
+			var j=tile[2];
+			for(var jj=0; jj<4; ++jj) {
+				if(j===jj || tileStateArray[i][jj]===turn){
+					tileStateArray[i][jj] = (turn + 10);
+				}
+			}
 		}
 		state.isSomebodyHu = function(tile){
 			var isHuArray = [false, false, false, false];
@@ -187,10 +226,11 @@ var State = {
 			return isHuArray;
 		}
 		state.isWin = function(turn){
-			var tiles = state.getTiles();
+			var tiles = state.getTiles(false);
 			return state.isHu(tiles[turn]);
 		}
 		state.isHu = function(myTiles) {
+			var tilesLen = myTiles.length;
 			function isTheSame(tile1, tile2){
 				return tile1[0]===tile2[0] && tile1[1]===tile2[1];
 			}
@@ -199,7 +239,7 @@ var State = {
 					var len = typeSplit[ii].length;
 					for(var i=0; i<len; ++i) typeSplit[ii][i]=0;
 				}
-				for(var j=0; j<17; ++j){
+				for(var j=0; j<tilesLen; ++j){
 					if(j!=eye1 && j!=eye2){
 						var type = myTiles[j][0];
 						var value = myTiles[j][1];
@@ -269,7 +309,7 @@ var State = {
 				}
 				return false;
 			}
-			for(var i=1; i<17; ++i) {
+			for(var i=1; i<tilesLen; ++i) {
 				if(isTheSame(myTiles[i-1], myTiles[i])) {
 					getTypeSplit(i-1,i);
 					if( is_winds_dragons_ok(typeSplit[0])===true &&
@@ -286,23 +326,20 @@ var State = {
 			setTileState(tile, -2);
 		}
 		state.getScore = function(tile, turn, s0, s1, s2){
-			function countScore(tileStateArray,i,j){
-				var score = 0;
-				for(var jj=0; jj<4; ++jj) {
-					if(jj!=j) if(tileStateArray[i][jj]===turn) score += s0;
-				}
-				if(tileStateArray.length != 9) return score;
-				if(isOneHasPos(tileStateArray, i-1, turn)) score += s1;
-				if(isOneHasPos(tileStateArray, i+1, turn)) score += s1;
-				if(isOneHasPos(tileStateArray, i-2, turn)) score += s2;
-				if(isOneHasPos(tileStateArray, i+2, turn)) score += s2;
-				return score;
-			}
 			var type = tile[0];
 			var tileStateArray = getTileStateArray(type);
 			var i=tile[1];
 			var j=tile[2];
-			return countScore(tileStateArray,i,j);
+			var score = 0;
+			for(var jj=0; jj<4; ++jj) {
+				if(jj!=j) if(tileStateArray[i][jj]===turn) score += s0;
+			}
+			if(tileStateArray.length != 9) return score;
+			if(isOneHandHasPos(tileStateArray, i-1, turn)) score += s1;
+			if(isOneHandHasPos(tileStateArray, i+1, turn)) score += s1;
+			if(isOneHandHasPos(tileStateArray, i-2, turn)) score += s2;
+			if(isOneHandHasPos(tileStateArray, i+2, turn)) score += s2;
+			return score;
 		}
 		state.getScoreByRemain = function(tile, turn){
 			var type = tile[0];
@@ -311,29 +348,57 @@ var State = {
 			var j=tile[2];
 			var score = 0;
 			
-			var pongNum = 0;
-			for(var jj=0; jj<4; ++jj) {
-				if(tileStateArray[i][jj]===turn) ++pongNum;
+			function sameNum(pos){
+				if(pos<0 || pos>=tileStateArray.length) return 0;
+				var num = 0;
+				for(var jj=0; jj<4; ++jj) {
+					if(tileStateArray[pos][jj] === turn) ++num;
+				}
+				return num;
 			}
-			if(pongNum === 2) score += ((state.remainTileNum(type,i,turn) * 35) );
-			//if(pongNum === 2) score += 60;
+
+			function isStraight(pos){
+				return (( sameNum(pos-1) > 0 ) && ( sameNum(pos-2) > 0 )) ||
+					(( sameNum(pos-1) > 0 ) && ( sameNum(pos+1) > 0 )) ||
+					(( sameNum(pos+1) > 0 ) && ( sameNum(pos+2) > 0 ));
+			}
+			
+			var pongNum = sameNum(i)
+			if(pongNum === 2) {
+				if( isStraight(i) ){
+					score += 0;
+				}else {
+					var waitingNum = state.remainTileNum(type,i,turn);
+					//console.log(waitingNum);
+					score += (waitingNum * 45);
+				}
+				//score += 60;
+			}
 			else if(pongNum === 3) score += 120;
-			else if(pongNum === 4) score += 140;
-			//score += ((pongNum-1)*5);
+			else if(pongNum === 4) score += 0;
+			console.log(tile, "pongScore: ", score);
 			
 			if(tileStateArray.length != 9) return score;
 
 			function chewScore(other, wait){
-				if(isOneHasPos(tileStateArray, other, turn)) {
+				var otherNum = sameNum(other);
+				if(otherNum === 0 || otherNum === 3){
+					score += 0;
+				}
+				else {
 					//score += 20;
-					if(isOneHasPos(tileStateArray, wait, turn)) score += 25;
-					else {
+					var waitNum = sameNum(wait);
+					if(waitNum === 0 || waitNum === 3){
 						var waitingNum = state.remainTileNum(type, wait, turn);
 						//console.log(tile);
 						//console.log(type, wait, waitingNum);
-						score += (waitingNum * 4);
+						score += (waitingNum * 5);
+					}
+					else{
+					   score += 25;
 					}
 				}
+				console.log(tile, "chewScore: ", score);
 			}
 			chewScore(i-1,i-2);
 			chewScore(i-1,i+1);
@@ -347,7 +412,8 @@ var State = {
 			if(i<0 || i>=9) return 0;
 			var tileStateArray = getTileStateArray(type);
 			var sum = 0;
-			for(var jj=0; jj<4; ++jj) if(tileStateArray[i][jj]===turn || tileStateArray[i][jj]===-2) ++sum;
+			for(var jj=0; jj<4; ++jj) if(tileStateArray[i][jj] === turn || tileStateArray[i][jj]===-2 || tileStateArray[i][jj] >= 10) ++sum;
+			//console.log(type, i, sum);
 			return 4-sum;
 		}
 		return state;

@@ -16,6 +16,9 @@ var Board = {
 		var pick2y;
 		var pick3x;
 		function drawTile(tile,x,y){
+			context.fillStyle = (tile[3]) ? "green" : "white";
+			context.fillRect(x+1,y+1,tileSize-2,tileSize-2);
+			
 			context.rect(x,y,tileSize,tileSize);
 			context.strokeStyle = "black";
 			context.stroke();
@@ -88,7 +91,7 @@ var Board = {
 			pick3x = 100;
 
 			drawRect(0,0,width,height);
-			var tiles = state.getTiles();
+			var tiles = state.getTiles(true);
 			drawPlayer(tiles,0);
 			drawPlayer(tiles,1);
 			drawPlayer(tiles,2);
@@ -110,7 +113,7 @@ var Board = {
 		board.replace = function(tile, turn, state){
 			cleanTile(turn);
 			board.pickUp(tile, turn);
-			var tiles = state.getTiles();
+			var tiles = state.getTiles(true);
 			drawPlayer(tiles, turn);
 		}
 		board.discard = function(tile, turn){

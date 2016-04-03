@@ -40,7 +40,7 @@ var Game = {
 			//console.log("complement");
 			var isSelfKong = state.isSelfKong(nowTile, turn);
 			if(isSelfKong && agents[turn].doKong()){
-				state.discard(nowTile);
+				state.doSelfKong(nowTile, turn);
 				if(isAnimation()) board.kong(nowTile, turn);
 				//console.log("&&&&&&&&&&&&&&&&&&&&&&&&& Kong!!", turn);
 				nextStep = pickUp;
@@ -48,16 +48,15 @@ var Game = {
 				return;
 			}
 			nextStep = replace;
-			if(isAnimation()) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration*50);
 		}
 		function replace(){
 			//console.log("replace");
 			nowTile = agents[turn].getAction();
 			state.discard(nowTile);
-			//console.log(nowTile, turn);
 			if(isAnimation()) board.replace(nowTile, turn, state);
 			nextStep = change;
-			if(isAnimation()) setTimeout(nextStep, duration);
+			if(isAnimation()) setTimeout(nextStep, duration*50);
 		}
 		function change(){
 			//console.log("change");
@@ -80,19 +79,19 @@ var Game = {
 			var isPong = state.isSomebodyPong(nowTile);
 			if(isPong != -1 && isPong != turn){
 				if(agents[isPong].doPong()){
+					state.somebodyDoPong(nowTile, isPong);
 					if(isAnimation()) board.change(nowTile, turn, isPong);
 					turn = isPong;
-					//console.log("============================ Pong!!", turn);
+					//console.log("================================== Pong!!", turn);
 					nextStep = replace;
 					if(isAnimation()) setTimeout(nextStep, duration);
 					return;
 				}
-				else state.discard(nowTile);
 			}
 			var nextPlayerTurn = nextTurn();
 			var isNextChew = state.isNextChew(nowTile, nextPlayerTurn);
 			if(isNextChew === true){
-				if(agents[nextPlayerTurn].doChew()){
+				if(agents[nextPlayerTurn].doChew(nowTile)){
 					if(isAnimation()) board.change(nowTile, turn, nextPlayerTurn);
 					turn = nextPlayerTurn;
 					//console.log("************** Chew!!", turn);
@@ -100,7 +99,6 @@ var Game = {
 					if(isAnimation()) setTimeout(nextStep, duration);
 					return;
 				}
-				else state.discard(nowTile);
 			}
 			nextStep = discard;
 			if(isAnimation()) setTimeout(nextStep, duration);

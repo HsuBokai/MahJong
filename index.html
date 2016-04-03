@@ -35,15 +35,17 @@ var state = State.createNew();
 
 var board = Board.createNew(canvas.getContext("2d"))
 
-var agents = [ReflexAgent.createNew(state, 0), 
+var agents = [
+	DesignAgent.createNew(state, 0),
+	//ReflexAgent.createNew(state, 0), 
 	ReflexAgent.createNew(state, 1), 
 	ReflexAgent.createNew(state, 2), 
-	//ReflexAgent.createNew(state, 3)]; 
-	DesignAgent.createNew(state, 3)];
+	ReflexAgent.createNew(state, 3)]; 
+	//DesignAgent.createNew(state, 3)];
 
 var game = Game.createNew(agents, state, canvas, board);
-//game.start(1000);
-game.simulate();
+game.start(25);
+//game.simulate();
 
 </script>
 </body>

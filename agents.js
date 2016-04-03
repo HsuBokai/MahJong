@@ -12,8 +12,38 @@ var ManualAgent = {
 var DesignAgent = {
 	createNew: function(state, myTurn){
 		var agent = {};
-		agent.doChew = function(){
-			return true;
+		agent.doChew = function(chewTile){
+			var type = chewTile[0];
+			var num = chewTile[1];
+			var tiles = state.getTiles(false);
+			var myTiles = tiles[myTurn];
+			var i = myTiles.length;
+			var histogram = [0,0,0,0,0];
+			while(i--){
+				var tile = myTiles[i];
+				if(tile[0]===type){
+					var diff = tile[1]-num;
+					if(diff===-2) ++histogram[0];
+					if(diff===-1) ++histogram[1];
+					if(diff===0) ++histogram[2];
+					if(diff===1) ++histogram[3];
+					if(diff===2) ++histogram[4];
+				}
+			}
+			if(histogram[2] > 0) return false;
+			if(histogram[0] > 0 && histogram[1] > 0) {
+				state.doNextChew(chewTile, num-2, num-1, myTurn);
+				return true;
+			}
+			if(histogram[1] > 0 && histogram[3] > 0) {
+				state.doNextChew(chewTile, num-1, num+1, myTurn);
+				return true;
+			}
+			if(histogram[3] > 0 && histogram[4] > 0) {
+				state.doNextChew(chewTile, num+1, num+2, myTurn);
+				return true;
+			}
+			return false;
 		}
 		agent.doPong = function(){
 			return true;
@@ -25,22 +55,19 @@ var DesignAgent = {
 			return true;
 		}
 		agent.getAction = function(){
-			var tiles = state.getTiles();
+			var tiles = state.getTiles(false);
 			var myTiles = tiles[myTurn];
-			//console.log(myTiles.length);
+			var i = myTiles.length;
 			var minScore = 9999;
-			var i=17;
+			var finalTileIndex = i-1;
 			while(i--){
-			//for(var i=0; i<17; ++i) { 
 				var tile = myTiles[i];
 				var s = state.getScoreByRemain(tile, myTurn);
-				//console.log(tile,s);
 				if(s < minScore){
 					minScore = s;
 					finalTileIndex = i;
 				}
 			}
-			console.log(minScore);
 			return myTiles[finalTileIndex];
 		}
 		agent.isManual = function(){ return false;}
@@ -52,8 +79,38 @@ var DesignAgent = {
 var ReflexAgent = {
 	createNew: function(state, myTurn){
 		var agent = {};
-		agent.doChew = function(){
-			return true;
+		agent.doChew = function(chewTile){
+			var type = chewTile[0];
+			var num = chewTile[1];
+			var tiles = state.getTiles(false);
+			var myTiles = tiles[myTurn];
+			var i = myTiles.length;
+			var histogram = [0,0,0,0,0];
+			while(i--){
+				var tile = myTiles[i];
+				if(tile[0]===type){
+					var diff = tile[1]-num;
+					if(diff===-2) ++histogram[0];
+					if(diff===-1) ++histogram[1];
+					if(diff===0) ++histogram[2];
+					if(diff===1) ++histogram[3];
+					if(diff===2) ++histogram[4];
+				}
+			}
+			if(histogram[2] > 0) return false;
+			if(histogram[0] > 0 && histogram[1] > 0) {
+				state.doNextChew(chewTile, num-2, num-1, myTurn);
+				return true;
+			}
+			if(histogram[1] > 0 && histogram[3] > 0) {
+				state.doNextChew(chewTile, num-1, num+1, myTurn);
+				return true;
+			}
+			if(histogram[3] > 0 && histogram[4] > 0) {
+				state.doNextChew(chewTile, num+1, num+2, myTurn);
+				return true;
+			}
+			return false;
 		}
 		agent.doPong = function(){
 			return true;
@@ -65,16 +122,14 @@ var ReflexAgent = {
 			return true;
 		}
 		agent.getAction = function(){
-			var tiles = state.getTiles();
+			var tiles = state.getTiles(false);
 			var myTiles = tiles[myTurn];
-			//console.log(myTiles.length);
+			var i = myTiles.length;
 			var minScore = 9999;
-			var i=17;
+			var finalTileIndex = i-1;
 			while(i--){
-			//for(var i=0; i<17; ++i) { 
 				var tile = myTiles[i];
 				var s = state.getScore(tile, myTurn, 5, 3, 1);
-				//console.log(tile,s);
 				if(s < minScore){
 					minScore = s;
 					finalTileIndex = i;
