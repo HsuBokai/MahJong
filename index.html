@@ -36,9 +36,9 @@ var state = State.createNew();
 var board = Board.createNew(canvas.getContext("2d"))
 
 var agents = [
-	//DesignAgent.createNew(state, 0),
+	DesignAgent.createNew(state, 0),
 	//ReflexAgent.createNew(state, 0), 
-	ManualAgent.createNew(state, 0),
+	//ManualAgent.createNew(state, 0),
 	ReflexAgent.createNew(state, 1), 
 	ReflexAgent.createNew(state, 2), 
 	//ManualAgent.createNew(state, 3)];

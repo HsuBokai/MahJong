@@ -162,11 +162,12 @@ var State = {
 			var type = tile[0];
 			var tileStateArray = getTileStateArray(type);
 			var i=tile[1];
+			var j=tile[2];
 			function is4TheSame(value){
-				return tileStateArray[i][0] === value &&
-					tileStateArray[i][1] === value &&
-					tileStateArray[i][2] === value &&
-					tileStateArray[i][3] === value;
+				for(var jj=0; jj<4; ++jj){
+					if(jj != j) if(tileStateArray[i][jj] != value) return false;
+				}
+				return true;
 			}
 			if(is4TheSame(turn)) return true;
 			if(is4TheSame(turn+10)) return true;

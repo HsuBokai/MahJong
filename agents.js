@@ -85,8 +85,8 @@ var DesignAgent = {
 			var minScore = 9999;
 			var finalTileIndex = i-1;
 			while(i--){
-				//var s1 = state.getScoreByRemain(myTiles[i], myTurn);
-				var s1 = state.getScore(myTiles[i], myTurn, 5, 3, 1);
+				var s1 = state.getScoreByRemain(myTiles[i], myTurn);
+				//var s1 = state.getScore(myTiles[i], myTurn, 5, 3, 1);
 				var s2 = (10 - state.getHeuristic(myTiles, i, i))*100;
 				var s = s1 + s2;
 				//console.log(s);
