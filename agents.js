@@ -3,6 +3,12 @@
 var ManualAgent = {
 	createNew: function(state, myTurn){
 		var agent = {};
+		agent.doHu = function(){
+			return true;
+		}
+		agent.doKong = function(){
+			return true;
+		}
 		agent.isManual = function(){ return true;}
 		agent.getName = function(){ return "manual";}
 		return agent;

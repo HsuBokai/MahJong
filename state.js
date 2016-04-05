@@ -60,13 +60,7 @@ var State = {
 				default: console.log("getTileState error!");
 			}
 		}
-		function setTileState(tile, value){
-			var type = tile[0];
-			var i=tile[1];
-			var j=tile[2];
-			var tileStateArray = getTileStateArray(type);
-			tileStateArray[i][j] = value;
-		}
+		
 		function isOneHandHasPos(tileStateArray, pos, turn){
 			if(tileStateArray.length != 9) return false;
 			if(pos<0 || pos>=9) return false;
@@ -168,11 +162,15 @@ var State = {
 			var type = tile[0];
 			var tileStateArray = getTileStateArray(type);
 			var i=tile[1];
-			var j=tile[2];
-			for(var jj=0; jj<4; ++jj) {
-				if(tileStateArray[i][jj] != turn) return false;;
+			function is4TheSame(value){
+				return tileStateArray[i][0] === value &&
+					tileStateArray[i][1] === value &&
+					tileStateArray[i][2] === value &&
+					tileStateArray[i][3] === value;
 			}
-			return true;
+			if(is4TheSame(turn)) return true;
+			if(is4TheSame(turn+10)) return true;
+			return false;
 		}
 		state.doSelfKong = function(tile, turn){
 			var type = tile[0];
@@ -217,10 +215,10 @@ var State = {
 		state.isSomebodyHu = function(tile){
 			var isHuArray = [false, false, false, false];
 			for(var turn=0; turn<4; ++turn){
-				setTileState(tile, turn);
+				state.setTileState(tile, turn);
 				isHuArray[turn] = state.isWin(turn);
 			}
-			setTileState(tile, -2);
+			state.setTileState(tile, -2);
 			return isHuArray;
 		}
 		state.isWin = function(turn){
@@ -242,7 +240,21 @@ var State = {
 		}
 		state.isEndWallNum = function(){ return wallNum <= 8; }
 		state.discard = function(tile){
-			setTileState(tile, -2);
+			state.setTileState(tile, -2);
+		}
+		state.setTileState = function(tile, value){
+			var type = tile[0];
+			var i=tile[1];
+			var j=tile[2];
+			var tileStateArray = getTileStateArray(type);
+			tileStateArray[i][j] = value;
+		}
+		state.getTileState = function(tile){
+			var type = tile[0];
+			var i=tile[1];
+			var j=tile[2];
+			var tileStateArray = getTileStateArray(type);
+			return tileStateArray[i][j];
 		}
 		state.getScore = function(tile, turn, s0, s1, s2){
 			var type = tile[0];

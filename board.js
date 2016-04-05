@@ -15,6 +15,7 @@ var Board = {
 		var pick13y;
 		var pick2y;
 		var pick3x;
+		var playerHand = [[60,height-50],[width-50,10],[60,20],[20,10]];
 		function drawTile(tile,x,y){
 			context.fillStyle = (tile[3]) ? "green" : "white";
 			context.fillRect(x+1,y+1,tileSize-2,tileSize-2);
@@ -28,8 +29,8 @@ var Board = {
 				case "winds": text = winds[ tile[1] ]; break;
 				case "dragons": text = dragons[ tile[1] ]; break;
 				case "bamboos": text = (tile[1] + 1) + 10; break;
-				case "stones": text = (tile[1] + 1) + 20; break;
-				case "characters": text = (tile[1] + 1) + 30; break;
+				case "stones": text = (tile[1] + 1); break;
+				case "characters": text = (tile[1] + 1) + 20; break;
 				default: console.log("drawTile error!");
 			}
 			context.fillStyle = "black";
@@ -41,31 +42,19 @@ var Board = {
 			context.fillRect(x,y,w,h);
 		}
 		function drawPlayer(tiles, turn){
-			var len = tileSize*16;
+			var len = tileSize * 16;
+			var left_ = playerHand[turn][0];
+			var top_ = playerHand[turn][1];
 			switch(turn){
 				case 0:
-					var left_ = 60;
-					var top_ = height-50;
+				case 2:
 					drawRect(left_ ,top_ , len, tileSize);
-					for(var i=0; i<16; ++i) drawTile(tiles[0][i], i*tileSize + left_, top_);
+					for(var i=0; i<16; ++i) drawTile(tiles[turn][i], i*tileSize + left_, top_);
 					break;
 				case 1:
-					var left_ = width-50;
-					var top_ = 10;
-					drawRect(left_ ,top_ , tileSize, len);
-					for(var i=0; i<16; ++i) drawTile(tiles[1][i], left_, i*tileSize + top_);
-					break;
-				case 2:
-					var left_ = 60;
-					var top_ = 20;
-					drawRect(left_ ,top_ , len, tileSize);
-					for(var i=0; i<16; ++i) drawTile(tiles[2][i], i*tileSize + left_, top_);
-					break;
 				case 3:
-					var left_ = 20;
-					var top_ = 10;
 					drawRect(left_ ,top_ , tileSize, len);
-					for(var i=0; i<16; ++i) drawTile(tiles[3][i], left_, i*tileSize + top_);
+					for(var i=0; i<16; ++i) drawTile(tiles[turn][i], left_, i*tileSize + top_);
 					break;
 			}
 		}
@@ -137,6 +126,30 @@ var Board = {
 		}
 		board.isInBoard = function(xx,yy){
 			return 0<=xx && xx<width && 0<=yy && yy<height;
+		}
+		board.clickTile = function(x,y){
+			function isInTile(l,t){
+				var diffx = x-l;
+				var diffy = y-t;
+				return 0 <=  diffx && diffx < tileSize && 0 <= diffy && diffy < tileSize;
+			}
+			if(isInTile(pick02x, pick0y)) return [0,16];
+			if(isInTile(pick1x, pick13y)) return [1,16];
+			if(isInTile(pick02x, pick2y)) return [2,16];
+			if(isInTile(pick3x, pick13y)) return [3,16];
+			var left_ = playerHand[0][0];
+			var top_ = playerHand[0][1];
+			for(var i=0; i<16; ++i) if(isInTile(i*tileSize + left_, top_)) return [0,i];
+			left_ = playerHand[1][0];
+			top_ = playerHand[1][1];
+			for(var i=0; i<16; ++i) if(isInTile(left_, i*tileSize + top_)) return [1,i];
+			left_ = playerHand[2][0];
+			top_ = playerHand[2][1];
+			for(var i=0; i<16; ++i) if(isInTile(i*tileSize + left_, top_)) return [2,i];
+			left_ = playerHand[3][0];
+			top_ = playerHand[3][1];
+			for(var i=0; i<16; ++i) if(isInTile(left_, i*tileSize + top_)) return [3,i];
+			return [-1,-1];
 		}
 		return board;
 	}
