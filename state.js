@@ -20,7 +20,6 @@ var State = {
 		var dragons = array2d(3,4);
 		var wallNum;
 
-		var typeSplit = [[0,0,0,0],[0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]];
 		function isBelongTo(state, turn) {
 			return state === turn || (state - 10) === turn;
 		}
@@ -62,7 +61,6 @@ var State = {
 			}
 		}
 		function setTileState(tile, value){
-			//console.log(tile);
 			var type = tile[0];
 			var i=tile[1];
 			var j=tile[2];
@@ -234,89 +232,10 @@ var State = {
 			function isTheSame(tile1, tile2){
 				return tile1[0]===tile2[0] && tile1[1]===tile2[1];
 			}
-			function getTypeSplit(eye1, eye2){
-				for(var ii=0; ii<5; ++ii) {
-					var len = typeSplit[ii].length;
-					for(var i=0; i<len; ++i) typeSplit[ii][i]=0;
-				}
-				for(var j=0; j<tilesLen; ++j){
-					if(j!=eye1 && j!=eye2){
-						var type = myTiles[j][0];
-						var value = myTiles[j][1];
-						switch(type){
-							case "winds": typeSplit[0][value]++; break;
-							case "dragons": typeSplit[1][value]++; break;
-							case "bamboos": typeSplit[2][value]++; break;
-							case "stones": typeSplit[3][value]++; break;
-							case "characters": typeSplit[4][value]++; break;
-							default: console.log("getTypeSplit error!!");
-						}
-					}
-				}
-			}
-			function is_winds_dragons_ok(valueArr){
-				var len = valueArr.length;
-				for(var i=0; i<len; ++i) if(valueArr[i]%3 != 0) return false;
-				return true;
-			}
-			function is_123456789_ok(valueArr){
-				var len = valueArr.length;
-				var k;
-				var sum = 0;
-				for(var i=0; i<len; ++i) {
-					var v = valueArr[i];
-					if(v<0) return false;
-					if(v!=0) k=i;
-					sum += v;
-				}
-				if(sum == 0) return true;
-				if(sum % 3 != 0) return false;
-				if(valueArr[k] >= 3) {
-					valueArr[k]-=3;
-					var check = is_123456789_ok(valueArr);
-					valueArr[k]+=3;
-					if(check===true) return true;
-				}
-				if(k<=6){ //0~6
-					valueArr[k]	-=1;
-					valueArr[k+1]	-=1;
-					valueArr[k+2]	-=1;
-					var check = is_123456789_ok(valueArr);
-					valueArr[k]	+=1;
-					valueArr[k+1]	+=1;
-					valueArr[k+2]	+=1;
-					if(check===true) return true;
-				}
-				if(2<=k){ // 2~8
-					valueArr[k]	-=1;
-					valueArr[k-1]	-=1;
-					valueArr[k-2]	-=1;
-					var check = is_123456789_ok(valueArr);
-					valueArr[k]	+=1;
-					valueArr[k-1]	+=1;
-					valueArr[k-2]	+=1;
-					if(check===true) return true;
-				}
-				if(1<=k && k<=7){ // 1~7
-					valueArr[k-1]	-=1;
-					valueArr[k]	-=1;
-					valueArr[k+1]	-=1;
-					var check = is_123456789_ok(valueArr);
-					valueArr[k-1]	+=1;
-					valueArr[k]	+=1;
-					valueArr[k+1]	+=1;
-					if(check===true) return true;
-				}
-				return false;
-			}
+			var win_ok_num = (tilesLen-2)/3;
 			for(var i=1; i<tilesLen; ++i) {
 				if(isTheSame(myTiles[i-1], myTiles[i])) {
-					getTypeSplit(i-1,i);
-					if( is_winds_dragons_ok(typeSplit[0])===true &&
-					is_winds_dragons_ok(typeSplit[1])===true &&
-					is_123456789_ok(typeSplit[2])===true &&
-					is_123456789_ok(typeSplit[3])===true &&
-					is_123456789_ok(typeSplit[4])===true) return true;
+					if(state.ok_num(myTiles, i-1, i) === win_ok_num) return true;
 				}
 			}
 			return false;
@@ -376,7 +295,7 @@ var State = {
 			}
 			else if(pongNum === 3) score += 120;
 			else if(pongNum === 4) score += 0;
-			console.log(tile, "pongScore: ", score);
+			//console.log(tile, "pongScore: ", score);
 			
 			if(tileStateArray.length != 9) return score;
 
@@ -392,13 +311,13 @@ var State = {
 						var waitingNum = state.remainTileNum(type, wait, turn);
 						//console.log(tile);
 						//console.log(type, wait, waitingNum);
-						score += (waitingNum * 5);
+						score += (waitingNum * 4);
 					}
 					else{
-					   score += 25;
+					   score += 20;
 					}
 				}
-				console.log(tile, "chewScore: ", score);
+				//console.log(tile, "chewScore: ", score);
 			}
 			chewScore(i-1,i-2);
 			chewScore(i-1,i+1);
@@ -413,8 +332,61 @@ var State = {
 			var tileStateArray = getTileStateArray(type);
 			var sum = 0;
 			for(var jj=0; jj<4; ++jj) if(tileStateArray[i][jj] === turn || tileStateArray[i][jj]===-2 || tileStateArray[i][jj] >= 10) ++sum;
-			//console.log(type, i, sum);
 			return 4-sum;
+		}
+		state.getHeuristic = function(tiles, index1, index2){
+			return state.ok_num(tiles, index1, index2);
+		}
+		state.ok_num = function(tiles, index1, index2){
+			var len = tiles.length;
+			var valueArr = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+			if(index1 >= 0) valueArr[index1] = 0;
+			if(index2 >= 0) valueArr[index2] = 0;
+			function count_ok_num(){
+				var sum = 0;
+				var end = -1;
+				for(var i=0; i<len; ++i) {
+					var v = valueArr[i];
+					if(v === 1) end = i;
+					sum += v;
+				}
+				if(sum < 3) return 0;
+
+				var max_num = 0;
+				valueArr[end] = 0;
+				max_num = Math.max(max_num, count_ok_num());
+				valueArr[end] = 1;
+				var count = [[],[],[]];
+				var type = tiles[end][0];
+				for(var i=end; i>=0; --i) {
+					if(valueArr[i]===1 && tiles[i][0]===type){
+						var iii = tiles[end][1] - tiles[i][1];
+						if(0 <= iii && iii < 3) count[iii].push(i);
+					}
+				}
+
+				if(count[0].length >= 3) {
+					valueArr[count[0][0]] = 0;
+					valueArr[count[0][1]] = 0;
+					valueArr[count[0][2]] = 0;
+					max_num = Math.max(max_num, count_ok_num()+1);
+					valueArr[count[0][0]] = 1;
+					valueArr[count[0][1]] = 1;
+					valueArr[count[0][2]] = 1;
+				}
+				if(getTileStateArray(type).length != 9) return max_num;
+				if(count[0].length > 0 && count[1].length > 0 && count[2].length > 0){
+					valueArr[count[0][0]] = 0;
+					valueArr[count[1][0]] = 0;
+					valueArr[count[2][0]] = 0;
+					max_num = Math.max(max_num, count_ok_num()+1);
+					valueArr[count[0][0]] = 1;
+					valueArr[count[1][0]] = 1;
+					valueArr[count[2][0]] = 1;
+				}
+				return max_num;
+			}
+			return count_ok_num();
 		}
 		return state;
 	}

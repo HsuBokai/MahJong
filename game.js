@@ -48,7 +48,7 @@ var Game = {
 				return;
 			}
 			nextStep = replace;
-			if(isAnimation()) setTimeout(nextStep, duration*50);
+			if(isAnimation()) setTimeout(nextStep, duration * 40);
 		}
 		function replace(){
 			//console.log("replace");
@@ -56,7 +56,7 @@ var Game = {
 			state.discard(nowTile);
 			if(isAnimation()) board.replace(nowTile, turn, state);
 			nextStep = change;
-			if(isAnimation()) setTimeout(nextStep, duration*50);
+			if(isAnimation()) setTimeout(nextStep, duration * 40);
 		}
 		function change(){
 			//console.log("change");
@@ -78,7 +78,7 @@ var Game = {
 			}
 			var isPong = state.isSomebodyPong(nowTile);
 			if(isPong != -1 && isPong != turn){
-				if(agents[isPong].doPong()){
+				if(agents[isPong].doPong(nowTile)){
 					state.somebodyDoPong(nowTile, isPong);
 					if(isAnimation()) board.change(nowTile, turn, isPong);
 					turn = isPong;
