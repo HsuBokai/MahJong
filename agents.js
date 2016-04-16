@@ -156,7 +156,7 @@ var ReflexAgent = {
 			var finalTileIndex = i-1;
 			while(i--){
 				var tile = myTiles[i];
-				var s = state.getScore(tile, myTurn, 5, 3, 1);
+				var s = state.getScore(tile, myTurn, 5, 4, 2);
 				if(s < minScore){
 					minScore = s;
 					finalTileIndex = i;

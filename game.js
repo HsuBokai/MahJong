@@ -58,7 +58,7 @@ var Game = {
 			var agent = agents[turn];
 			if(isDecide === false) {
 				if(agent.isManual()){
-					console.log("your turn!!");
+					window.alert("please discard a tile!!");
 					return;
 				}
 				else nowTile = agent.getAction();
@@ -95,7 +95,7 @@ var Game = {
 				var agent = agents[isPong];
 				if(isDecide === false) {
 					if(agent.isManual()){
-						console.log("do you pong ?");
+						window.alert("do you pong ?");
 						return;
 					}
 					else isAction = agent.doPong(nowTile);
@@ -121,7 +121,7 @@ var Game = {
 				var agent = agents[nextPlayerTurn];
 				if(isDecide === false) {
 					if(agent.isManual()){
-						console.log("do you chew ?");
+						window.alert("do you chew ?");
 						return;
 					}
 					else {
@@ -154,7 +154,7 @@ var Game = {
 			isDecide = false;
 			chew_click_count = 0;
 			for(var i=0; i<5; ++i) isEndArray[i] = 0;
-			turn = 0;
+			turn = 1;
 			state.init();
 			if(isAnimation()) board.init(state);
 			nextStep = pickUp;
@@ -166,15 +166,12 @@ var Game = {
 				var y = e.pageY;
 				if(nextStep === replace){
 					var ret = board.clickTile(x,y);
-					console.log(ret);
 					if(ret[0] != turn) return;
 					var index = ret[1];
 					if(0<=index && index<17){
-						console.log("make replace decision!!");
 						isDecide = true;
 						if(index != 16){
 							var originalState = state.getTileState(nowTile);
-							console.log("state: " + originalState);
 							state.discard(nowTile);
 							var tiles = state.getTiles(true);
 							state.setTileState(nowTile, originalState);
@@ -204,7 +201,7 @@ var Game = {
 						}
 						else if(isAnimation()) setTimeout(nextStep, duration);
 					}
-					else if(chew_click_count === 1){
+					else if(chew_click_count === 1 || chew_click_count === 2){
 						var ret = board.clickTile(x,y);
 						if(ret[0] != nextPlayerTurn) return;
 						var index = ret[1];
@@ -212,22 +209,14 @@ var Game = {
 							var tiles = state.getTiles(true);
 							state.setTileState(tiles[nextPlayerTurn][index], chewState);
 						}
-						chew_click_count = 2;
-					}
-					else if(chew_click_count === 2){
-						var ret = board.clickTile(x,y);
-						if(ret[0] != nextPlayerTurn) return;
-						var index = ret[1];
-						if(0<=index && index<16){
-							var tiles = state.getTiles(true);
-							state.setTileState(tiles[nextPlayerTurn][index], chewState);
+						chew_click_count = (chew_click_count+1) % 3;
+						if(chew_click_count === 0){
+							state.setTileState(nowTile, chewState);
+							isDecide = false;
+							turn = nextPlayerTurn;
+							nextStep = replace;
+							if(isAnimation()) setTimeout(nextStep, duration);
 						}
-						chew_click_count = 0;
-						isDecide = false;
-						state.setTileState(nowTile, chewState);
-						turn = nextPlayerTurn;
-						nextStep = replace;
-						if(isAnimation()) setTimeout(nextStep, duration);
 					}
 					else{
 						console.log("chew_click_count error!!");
