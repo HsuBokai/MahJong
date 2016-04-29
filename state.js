@@ -105,8 +105,8 @@ var State = {
 			var tiles = [[],[],[],[]];
 			traversal(function(tileStateArray,i,j,type){
 				var tileState = tileStateArray[i][j];
-				if(0 <= tileState && tileState < 4) tiles[tileState].push([type,i,j,false]);
-				if(isShowing) if(10 <= tileState && tileState < 14) tiles[tileState-10].push([type,i,j,true]);
+				if(0 <= tileState && tileState < 4) tiles[tileState].push([type,i,j,0]);
+				if(isShowing) if(10 <= tileState && tileState < 14) tiles[tileState-10].push([type,i,j,1]);
 			});
 			return tiles;
 		}

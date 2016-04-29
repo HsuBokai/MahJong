@@ -17,7 +17,13 @@ var Board = {
 		var pick3x;
 		var playerHand = [[60,height-50],[width-50,10],[60,20],[20,10]];
 		function drawTile(tile,x,y){
-			context.fillStyle = (tile[3]) ? "green" : "white";
+			switch(tile[3]){
+				case 1: context.fillStyle = "green"; break;
+				case 2: context.fillStyle = "yellow"; break;
+				case 3: context.fillStyle = "red"; break;
+				default: context.fillStyle = "white"; break;
+			}
+			//context.fillStyle = (tile[3])? "green" : "white";
 			context.fillRect(x+1,y+1,tileSize-2,tileSize-2);
 			
 			context.rect(x,y,tileSize,tileSize);
@@ -100,10 +106,8 @@ var Board = {
 			board.pickUp(tile, turnTo);
 		}
 		board.replace = function(tile, turn, state){
-			cleanTile(turn);
-			board.pickUp(tile, turn);
-			var tiles = state.getTiles(true);
-			drawPlayer(tiles, turn);
+			board.change(tile, turn, turn);
+			board.redrawPlayer(turn);
 		}
 		board.discard = function(tile, turn){
 			cleanTile(turn);
@@ -150,6 +154,15 @@ var Board = {
 			top_ = playerHand[3][1];
 			for(var i=0; i<16; ++i) if(isInTile(left_, i*tileSize + top_)) return [3,i];
 			return [-1,-1];
+		}
+		board.highlight = function(tile, turn, color_index){
+			tile[3] = color_index;
+			board.pickUp(tile, turn);
+			tile[3] = 0;
+		}
+		board.redrawPlayer = function(turn){
+			var tiles = state.getTiles(true);
+			drawPlayer(tiles, turn);
 		}
 		return board;
 	}

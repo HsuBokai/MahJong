@@ -58,7 +58,8 @@ var Game = {
 			var agent = agents[turn];
 			if(isDecide === false) {
 				if(agent.isManual()){
-					window.alert("please discard a tile!!");
+					board.highlight(nowTile, turn, 2);
+					//window.alert("please discard a tile!!");
 					return;
 				}
 				else nowTile = agent.getAction();
@@ -80,6 +81,7 @@ var Game = {
 			}
 			if(text != ""){
 				if(isAnimation()){
+					nowTile[3] = 3;
 					board.discard(nowTile, turn);
 					window.alert(text);
 				}
@@ -95,7 +97,8 @@ var Game = {
 				var agent = agents[isPong];
 				if(isDecide === false) {
 					if(agent.isManual()){
-						window.alert("do you pong ?");
+						board.highlight(nowTile, turn, 2);
+						//window.alert("do you pong ?");
 						return;
 					}
 					else isAction = agent.doPong(nowTile);
@@ -121,7 +124,8 @@ var Game = {
 				var agent = agents[nextPlayerTurn];
 				if(isDecide === false) {
 					if(agent.isManual()){
-						window.alert("do you chew ?");
+						board.highlight(nowTile, turn, 3);
+						//window.alert("do you chew ?");
 						return;
 					}
 					else {
@@ -198,6 +202,7 @@ var Game = {
 							state.discard(nowTile);
 							chew_click_count = 1;
 							if(isAnimation()) board.change(nowTile, turn, nextPlayerTurn);
+							window.alert("please choose 2 tiles with chew!!");
 						}
 						else if(isAnimation()) setTimeout(nextStep, duration);
 					}
@@ -208,6 +213,7 @@ var Game = {
 						if(0<=index && index<16){
 							var tiles = state.getTiles(true);
 							state.setTileState(tiles[nextPlayerTurn][index], chewState);
+							board.redrawPlayer(nextPlayerTurn);
 						}
 						chew_click_count = (chew_click_count+1) % 3;
 						if(chew_click_count === 0){
